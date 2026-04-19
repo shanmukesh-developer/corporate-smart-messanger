@@ -236,7 +236,7 @@ def initialize_sample_data():
         admin_users = [
             {
                 "login_id": "devadm000000",
-                "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Gm.F5e",  # devadm000000
+                "password_hash": "$2b$12$a0hwaVoLEKJqy8glYloGvORd6fPuuTuuqAqkGYM6kRKnFLXycF2XG",  # devadm000000
                 "first_name": "Admin",
                 "last_name": "User",
                 "email": "admin@company.com",
@@ -249,7 +249,7 @@ def initialize_sample_data():
             },
             {
                 "login_id": "hrsadm000000",
-                "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Gm.F5e",  # hrsadm000000
+                "password_hash": "$2b$12$a0hwaVoLEKJqy8glYloGvORd6fPuuTuuqAqkGYM6kRKnFLXycF2XG",  # hrsadm000000
                 "first_name": "HR",
                 "last_name": "Admin",
                 "email": "hr@company.com",
@@ -258,6 +258,19 @@ def initialize_sample_data():
                 "role": "Admin",
                 "role_code": "adm",
                 "password_changed": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "login_id": "finman000001",
+                "password_hash": "$2b$12$0wuzFQNNbbPV73ddXdPwsuH1EvZvViwzcgCrx0tDOuY9g4HyXziqa",  # Kavya@2005
+                "first_name": "Kavyanjali",
+                "last_name": "Thalluri",
+                "email": "kavya@company.com",
+                "department": "Finance",
+                "department_code": "fin",
+                "role": "Manager",
+                "role_code": "man",
+                "password_changed": True,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
         ]
