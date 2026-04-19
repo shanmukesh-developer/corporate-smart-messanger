@@ -1,7 +1,7 @@
 import sys, os
 import streamlit as st # type: ignore
 import datetime
-import base64
+import base64 # type: ignore
 
 # Robust Path Resolution
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

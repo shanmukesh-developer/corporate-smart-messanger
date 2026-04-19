@@ -10,8 +10,8 @@ BACKEND_DIR = os.path.join(CWD, "backend")
 if BACKEND_DIR not in sys.path: sys.path.insert(0, BACKEND_DIR)
 
 try:
-    from styles import SHARED_CSS
-    from database import (
+    from styles import SHARED_CSS # type: ignore
+    from database import ( # type: ignore
         get_user_conversations, get_messages, send_message, 
         get_all_users_for_chat, get_or_create_direct_conversation, 
         create_group_conversation, get_registered_users
@@ -19,8 +19,8 @@ try:
     from streamlit_autorefresh import st_autorefresh # type: ignore
 except (ImportError, ModuleNotFoundError):
     try:
-        from frontend.styles import SHARED_CSS
-        from backend.database import (
+        from frontend.styles import SHARED_CSS # type: ignore
+        from backend.database import ( # type: ignore
             get_user_conversations, get_messages, send_message, 
             get_all_users_for_chat, get_or_create_direct_conversation, 
             create_group_conversation, get_registered_users

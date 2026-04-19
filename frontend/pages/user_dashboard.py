@@ -23,9 +23,9 @@ except ImportError:
     # Manual fallback for IDE visibility
     sys.path.append(os.path.join(os.getcwd(), "backend"))
     sys.path.append(os.getcwd())
-    from styles import SHARED_CSS
-    from auth import change_password
-    from rag_assistant import answer
+    from styles import SHARED_CSS # type: ignore
+    from auth import change_password # type: ignore
+    from rag_assistant import answer # type: ignore
 
 # Helper for background
 def get_base64_bin_file(bin_file):

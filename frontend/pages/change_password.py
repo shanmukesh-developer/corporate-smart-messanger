@@ -1,5 +1,5 @@
 import sys, os
-import streamlit as st
+import streamlit as st # type: ignore
 
 # Path Resolution
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
