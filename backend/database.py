@@ -1,7 +1,7 @@
-import os
-import sys
-import uuid
-from datetime import datetime, timezone
+import os # type: ignore
+import sys # type: ignore
+import uuid # type: ignore
+from datetime import datetime, timezone # type: ignore
 from pymongo import MongoClient # type: ignore
 from pymongo.errors import OperationFailure, ServerSelectionTimeoutError # type: ignore
 from dotenv import load_dotenv # type: ignore
@@ -242,7 +242,7 @@ def send_message(conversation_id, sender_id, content):
                         
     except Exception as e:
         # Log error but don't fail message sending
-        import logging
+        import logging # type: ignore
         logger = logging.getLogger(__name__)
         logger.error(f"Error extracting tasks from message: {e}")
     

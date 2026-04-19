@@ -1,4 +1,4 @@
-import sys, os
+import sys, os # type: ignore
 import streamlit as st # type: ignore
 import base64 # type: ignore
 

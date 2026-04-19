@@ -1,4 +1,4 @@
-import sys, os
+import sys, os # type: ignore
 from dotenv import load_dotenv # type: ignore
 from groq import Groq # type: ignore
 
