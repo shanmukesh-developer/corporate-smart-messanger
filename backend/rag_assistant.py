@@ -1,64 +1,65 @@
-# backend/rag_assistant.py
+from dotenv import load_dotenv
 import os
-from sentence_transformers import SentenceTransformer
-import chromadb
+import sys
 from groq import Groq
 
-# Initialize embedding model
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Ensure backend directory is in path for imports
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.append(backend_dir)
 
-# Use same absolute path as rag_indexer.py
-rag_store_path = os.path.join(os.path.dirname(__file__), "../rag_store")
-chroma_client = chromadb.PersistentClient(path=rag_store_path)
-collection = chroma_client.get_or_create_collection("messages")
+try:
+    from database import get_messages, get_conversations_collection
+except ImportError:
+    from .database import get_messages, get_conversations_collection
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Groq client
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+groq_key = os.environ.get("GROQ_API_KEY")
+if not groq_key or "your_groq_key_here" in groq_key:
+    print("⚠️ GROQ_API_KEY is missing or using placeholder. AI features will be disabled.")
+    groq_client = None
+else:
+    groq_client = Groq(api_key=groq_key)
 
 
 def retrieve_context(query: str, user_id: str, top_k=15):
     """
-    Retrieve relevant messages from conversations the user participates in.
-    We fetch broadly (no sender filter) so we get full conversation context,
-    not just messages the user themselves sent.
+    Lightweight context retrieval: Fetch recent messages from conversations the user is in.
     """
-    if collection.count() == 0:
+    try:
+        convos_col = get_conversations_collection()
+        # Find conversations the user is a participant in
+        user_convos = list(convos_col.find({"participants": user_id}, {"conversation_id": 1}))
+        convo_ids = [c["conversation_id"] for c in user_convos]
+
+        if not convo_ids:
+            return []
+
+        # Fetch recent messages from these conversations
+        from backend.database import get_messages_collection
+        msgs_col = get_messages_collection()
+        
+        # Get last top_k messages across all user's conversations
+        recent_msgs = msgs_col.find(
+            {"conversation_id": {"$in": convo_ids}},
+            {"sender_id": 1, "content": 1, "timestamp": 1}
+        ).sort("timestamp", -1).limit(top_k)
+
+        context = []
+        for m in recent_msgs:
+            sender = m.get("sender_id", "unknown")
+            content = m.get("content", "")
+            context.append(f"[{sender}]: {content}")
+        
+        # Reverse to keep chronological order for the LLM
+        return list(reversed(context))
+        
+    except Exception as e:
+        print(f"Error in retrieve_context: {e}")
         return []
-
-    q_embedding = model.encode(query).tolist()
-
-    # First try: get messages from conversations where this user is a participant
-    # We search all messages and filter by conversation_id later if needed
-    results = collection.query(
-        query_embeddings=[q_embedding],
-        n_results=min(top_k, collection.count()),
-    )
-
-    if not results["documents"] or not results["documents"][0]:
-        return []
-
-    # Filter to only messages from conversations the user is part of
-    # (messages sent by the user will have sender == user_id)
-    # We include all messages from those conversations for full context
-    docs = results["documents"][0]
-    metas = results["metadatas"][0]
-
-    # Find conversation IDs the user participates in
-    user_conversations = set()
-    for meta in metas:
-        if meta.get("sender") == user_id:
-            user_conversations.add(meta.get("conversation_id"))
-
-    # If user has conversations, return all retrieved messages from those convos
-    if user_conversations:
-        filtered = [
-            doc for doc, meta in zip(docs, metas)
-            if meta.get("conversation_id") in user_conversations
-        ]
-        return filtered if filtered else docs  # fallback to all if filter returns nothing
-
-    # Fallback: return all retrieved docs (useful when index has messages but user_id mismatch)
-    return docs
 
 
 def answer(query: str, user_id: str, llm_client=None) -> str:
@@ -85,6 +86,9 @@ Be concise and specific — quote the relevant message if it helps."""
 {context_str}
 
 User question: {query}"""
+
+    if not groq_client:
+        return "AI response disabled: GROQ_API_KEY is missing or invalid."
 
     try:
         response = groq_client.chat.completions.create(

@@ -6,6 +6,7 @@ import streamlit as st
 from styles import SHARED_CSS
 from database import get_users_collection, get_registered_users
 from auth import register_user, change_password, DEPARTMENTS, ROLES
+from rag_assistant import answer
 
 st.set_page_config(
     page_title="Admin Dashboard – CSM",
@@ -66,7 +67,7 @@ st.markdown("""
 
 # Auth guard – admins only
 if not st.session_state.get("logged_in"):
-    st.switch_page("../streamlit_login.py")
+    st.switch_page("pages/streamlit_login.py")
 
 if st.session_state.get("role") != "admin":
     st.error("⛔ Access denied. Admin privileges required.")
@@ -160,7 +161,6 @@ if "selected_feature" in st.session_state:
                 st.write(prompt)
 
             with st.spinner("Thinking..."):
-                from rag_assistant import answer
                 user_id = st.session_state.get("user_id", "")
                 bot_response = answer(prompt, user_id, None)
 

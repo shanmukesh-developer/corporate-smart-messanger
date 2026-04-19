@@ -24,10 +24,10 @@ def migrate_to_mongodb():
     mongodb_uri = os.getenv("MONGODB_URI")
     db_name = os.getenv("DB_NAME", "chatapp1")
     
-    if not mongodb_uri:
-        print("❌ MONGODB_URI not found in .env file")
-        print("Please update your .env file with MongoDB credentials:")
-        print("MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/")
+    if not mongodb_uri or mongodb_uri == "mongodb+srv://username:password@cluster.mongodb.net/" or "username:password" in mongodb_uri:
+        print("❌ MONGODB_URI is missing or contains placeholder values!")
+        print("Please update your .env file with your actual MongoDB Atlas connection string.")
+        print("Example: MONGODB_URI=mongodb+srv://admin:secret@mycluster.a1b2c.mongodb.net/")
         return False
     
     try:

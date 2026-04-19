@@ -4,6 +4,19 @@ from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import uuid
+import sys
+
+# Ensure backend directory is in path for imports
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.append(root_dir)
+if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    import local_db
+except ImportError:
+    from . import local_db
 
 load_dotenv()
 
@@ -17,19 +30,26 @@ def get_db():
     
     if _client is None:
         uri = os.getenv("MONGODB_URI")
+        
+        # Check for placeholder URI
+        if not uri or uri == "mongodb+srv://username:password@cluster.mongodb.net/" or "username:password" in uri:
+            print("⚠️ Using Local Database: MONGODB_URI is empty or contains placeholder values.")
+            _use_local_db = True
+            return None
+            
         try:
             _client = MongoClient(uri, serverSelectionTimeoutMS=6000)
             _client.admin.command("ping")
         except OperationFailure as e:
-            print(f"MongoDB Auth Failed: {e}")
+            print(f"❌ MongoDB Auth Failed: {e}. Please check your credentials in .env")
             _use_local_db = True
             return None
         except ServerSelectionTimeoutError:
-            print("Cannot reach MongoDB. Using local file database instead.")
+            print("❌ Cannot reach MongoDB. Check your internet connection and IP whitelist.")
             _use_local_db = True
             return None
         except Exception as e:
-            print(f"MongoDB connection error: {e}. Using local file database instead.")
+            print(f"❌ MongoDB error: {e}. Falling back to local database.")
             _use_local_db = True
             return None
     return _client[os.getenv("DB_NAME", "chatapp1")]
@@ -38,8 +58,7 @@ def get_users_collection():
     db = get_db()
     if db is None:
         # Use local database
-        from local_db import get_users_collection as local_users
-        return local_users()
+        return local_db.get_users_collection()
     return db["users"]
 
 def get_next_sequence_number(department_code, role_code):
@@ -78,22 +97,19 @@ def get_registered_users(department_code=None):
 def get_conversations_collection():
     db = get_db()
     if db is None:
-        from local_db import get_conversations_collection as local_convos
-        return local_convos()
+        return local_db.get_conversations_collection()
     return db["conversations"]
 
 def get_messages_collection():
     db = get_db()
     if db is None:
-        from local_db import get_messages_collection as local_messages
-        return local_messages()
+        return local_db.get_messages_collection()
     return db["messages"]
 
 def get_events_collection():
     db = get_db()
     if db is None:
-        from local_db import get_events_collection as local_events
-        return local_events()
+        return local_db.get_events_collection()
     return db["events"]
 
 def get_user_conversations(login_id):
@@ -188,10 +204,13 @@ def send_message(conversation_id, sender_id, content):
                 participants = conversation.get("participants", [])
                 
                 # Import task extractor
-                from task_extractor import extract_tasks_from_message
+                try:
+                    import task_extractor
+                except ImportError:
+                    from . import task_extractor
                 
                 # Extract tasks
-                tasks = extract_tasks_from_message(
+                tasks = task_extractor.extract_tasks_from_message(
                     content, 
                     sender_id, 
                     participants, 

@@ -25,7 +25,12 @@ class TaskExtractor:
     """AI-powered task extraction from chat messages"""
     
     def __init__(self):
-        self.anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        if not anthropic_key or "your_anthropic_key_here" in anthropic_key:
+            print("⚠️ ANTHROPIC_API_KEY is missing or using placeholder. Task extraction AI will be disabled.")
+            self.anthropic_client = None
+        else:
+            self.anthropic_client = Anthropic(api_key=anthropic_key)
         
     def extract_tasks_from_message(self, message_text: str, sender_id: str, 
                                  participants: List[str], conversation_id: str,

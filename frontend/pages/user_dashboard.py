@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import streamlit as st
 from styles import SHARED_CSS
 from auth import change_password
+from rag_assistant import answer
 
 st.set_page_config(
     page_title="User Dashboard – CSM",
@@ -170,12 +171,6 @@ with row2_col2:
         st.session_state["selected_feature"] = "settings"
         st.rerun()
 
-from rag_assistant import answer
-# Feature Details Section
-if "selected_feature" in st.session_state:
-    st.divider()
-
-    if st.session_state["selected_feature"] == "chatbot":
         st.markdown("#### 🤖 AI Chatbot Assistant")
         if "chatbot_messages" not in st.session_state:
             st.session_state["chatbot_messages"] = []
