@@ -1,340 +1,170 @@
 import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "backend"))
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 import streamlit as st
-from styles import SHARED_CSS
-from database import get_users_collection, get_registered_users
-from auth import register_user, change_password, DEPARTMENTS, ROLES
-from rag_assistant import answer
+import base64
 
-st.set_page_config(
-    page_title="Admin Dashboard – CSM",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+# Robust Path Resolution for Zero-Error IDE
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND = os.path.join(ROOT, "backend")
+if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
+if ROOT not in sys.path: sys.path.insert(0, ROOT)
+
+try:
+    from styles import SHARED_CSS
+    from database import get_users_collection, get_registered_users
+    from auth import register_user, change_password, DEPARTMENTS, ROLES
+    from rag_assistant import answer
+except ImportError:
+    # Fallback to local paths if IDE is struggling
+    sys.path.append(os.path.join(os.getcwd(), "backend"))
+    sys.path.append(os.getcwd())
+    from styles import SHARED_CSS
+    from database import get_users_collection, get_registered_users
+    from auth import register_user, change_password, DEPARTMENTS, ROLES
+    from rag_assistant import answer
+
+# Helper for background
+def get_base64_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+st.set_page_config(page_title="Admin Dashboard – CSM", page_icon="🛡️", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
-st.markdown("""
-<style>
-.dash-card {
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: 2px solid #d0d0d0;
-    border-radius: 10px;
-    background-color: #ffffff;
-    padding: 1rem;
-    margin: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.dash-card:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    background-color: #fafafa;
-}
-.stButton > button {
-    background-color: #A87B33 !important;
-    color: white !important;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    margin-top: 0.5rem;
-}
-.stButton > button:hover {
-    background-color: #8C662A !important;
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(168, 123, 51, 0.3);
-}
-.user-info-card {
-    background: linear-gradient(135deg, #A87B33 0%, #8C662A 100%);
-    color: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 15px rgba(168, 123, 51, 0.3);
-}
-.role-badge-admin {
-    background-color: #1a1a1a;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-}
-</style>
-""", unsafe_allow_html=True)
+
+# LOAD BACKGROUND
+bg_path = os.path.join(ROOT, "frontend", "assets", "bg.png")
+if os.path.exists(bg_path):
+    bin_str = get_base64_bin_file(bg_path)
+    st.markdown(f"""
+    <style>
+    .stApp {{
+        background: linear-gradient(rgba(10, 14, 26, 0.9), rgba(10, 14, 26, 0.9)), 
+                    url("data:image/png;base64,{bin_str}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
 # Auth guard – admins only
-if not st.session_state.get("logged_in"):
-    st.switch_page("pages/streamlit_login.py")
-
-if st.session_state.get("role") != "admin":
-    st.error("⛔ Access denied. Admin privileges required.")
+if not st.session_state.get("logged_in") or st.session_state.get("role") != "admin":
+    st.error("⛔ Unauthorized Access")
+    if st.button("Back to Login"): st.switch_page("pages/streamlit_login.py")
     st.stop()
 
-# Initialize session state variables
-if "selected_feature" not in st.session_state:
-    st.session_state["selected_feature"] = None
-if "chatbot_messages" not in st.session_state:
-    st.session_state["chatbot_messages"] = []
+# Initialize session state
+if "selected_feature" not in st.session_state: st.session_state["selected_feature"] = None
+if "chatbot_messages" not in st.session_state: st.session_state["chatbot_messages"] = []
 
-# Login success toast
-if st.session_state.pop("login_toast", False):
-    st.toast(f"✅ Login successful! Welcome, {st.session_state.get('first_name', 'Admin')}!", icon="🎉")
+# Header UI
+col_info, col_logout = st.columns([4, 1])
+with col_info:
+    st.markdown(f"<div class='vfx-fade-in'><h1>🛡️ Master Command Center</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p>Admin: <strong>{st.session_state.get('first_name', '')} {st.session_state.get('last_name', '')}</strong> | Secure Workspace</p></div>", unsafe_allow_html=True)
 
-# Header with user info
-col_title, col_logout = st.columns([5, 1])
-with col_title:
-    st.markdown(f"## 🛡️ Admin Dashboard &nbsp;<span class='role-badge-admin'>ADMIN</span>", unsafe_allow_html=True)
-    st.markdown(f"Welcome, **{st.session_state.get('first_name', '')} {st.session_state.get('last_name', '')}**")
 with col_logout:
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚪 Sign Out", use_container_width=True):
-        for k in ("logged_in", "role", "first_name", "last_name", "login_id", "department", "user_id", "department_code"):
-            st.session_state.pop(k, None)
+    if st.button("🚪 SIGN OUT", use_container_width=True):
+        st.session_state.clear()
         st.switch_page("pages/streamlit_login.py")
-
-# User information card
-st.markdown(f"""
-<div class="user-info-card">
-    <h3>👋 Welcome back, {st.session_state.get('first_name', 'Admin')}!</h3>
-    <p><strong>🏢 Department:</strong> {st.session_state.get('department', 'N/A')}</p>
-    <p><strong>💼 Role:</strong> {st.session_state.get('role', 'N/A')}</p>
-    <p><strong>🔑 Login ID:</strong> {st.session_state.get('login_id', 'N/A')}</p>
-</div>
-""", unsafe_allow_html=True)
 
 st.divider()
 
-# Dashboard Features Grid - 3x2 Layout
-row1_col1, row1_col2 = st.columns(2, gap="small")
-row2_col1, row2_col2 = st.columns(2, gap="small")
-row3_col1, row3_col2 = st.columns(2, gap="small")
+# ICON-BASED TILE GRID (GLASSMORPHISM)
+def admin_tile(label, icon, key, desc):
+    st.markdown(f"""
+    <div class="glass-card vfx-fade-in" style="text-align: center; padding: 1rem; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">{icon}</div>
+        <div style="color: var(--primary-gold); font-weight: 700;">{label}</div>
+        <div style="color: var(--text-dim); font-size: 0.8rem;">{desc}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button(f"LAUNCH {label}", key=key, use_container_width=True):
+        return True
+    return False
 
-with row1_col1:
-    if st.button("💬\n\n**Messages**\n\nTeam communications\n\n**Open Chat**", key="messages_view_btn", use_container_width=True):
-        st.switch_page("pages/messages.py")
+r1c1, r1c2, r1c3 = st.columns(3)
+r2c1, r2c2, r2c3 = st.columns(3)
 
-with row1_col2:
-    if st.button("📅\n\n**Calendar**\n\nEvents & meetings\n\n**View Schedule**", key="calendar_open_btn", use_container_width=True):
-        st.switch_page("pages/calendar.py")
+with r1c1:
+    if admin_tile("MESSAGES", "💬", "adm_msg", "Team Comms"): st.switch_page("pages/messages.py")
+with r1c2:
+    if admin_tile("CALENDAR", "📅", "adm_cal", "Schedule"): st.switch_page("pages/calendar.py")
+with r1c3:
+    if admin_tile("AI ANALYST", "🤖", "adm_ai", "Deep Insights"):
+        st.session_state["selected_feature"] = "chatbot"; st.rerun()
 
-with row2_col1:
-    if st.button("🤖\n\n**AI Assistant**\n\nSmart help & insights\n\n**Start Chat**", key="chatbot_chat_btn", use_container_width=True):
-        st.session_state["selected_feature"] = "chatbot"
-        st.rerun()
+with r2c1:
+    if admin_tile("ADD USER", "👥", "adm_reg", "Onboarding"):
+        st.session_state["selected_feature"] = "register"; st.rerun()
+with r2c2:
+    if admin_tile("TEAM DIRECTORY", "📋", "adm_view", "User Management"):
+        st.session_state["selected_feature"] = "view"; st.rerun()
+with r2c3:
+    if admin_tile("SYSTEM SETTINGS", "⚙️", "adm_set", "Preferences"):
+        st.session_state["selected_feature"] = "settings"; st.rerun()
 
-with row2_col2:
-    if st.button("⚙️\n\n**Settings**\n\nAccount & preferences\n\n**Configure**", key="settings_config_btn", use_container_width=True):
-        st.session_state["selected_feature"] = "settings"
-        st.rerun()
+# --- FEATURE DISPLAY ---
+st.markdown("<br>", unsafe_allow_html=True)
 
-with row3_col1:
-    if st.button("👥\n\n**Add Employee**\n\nRegister new team member\n\n**Create Account**", key="register_user_btn", use_container_width=True):
-        st.session_state["selected_feature"] = "register"
-        st.rerun()
-
-with row3_col2:
-    if st.button("📋\n\n**Team Directory**\n\nManage team members\n\n**View All**", key="view_users_btn", use_container_width=True):
-        st.session_state["selected_feature"] = "view"
-        st.rerun()
-
-# --- FEATURE DISPLAY AREA ---
 if st.session_state.get("selected_feature"):
-    st.divider()
+    st.markdown("<div class='glass-card vfx-fade-in vfx-glow'>", unsafe_allow_html=True)
     
-    # 🤖 CHATBOT FEATURE
-    if st.session_state.get("selected_feature") == "chatbot":
-        st.markdown("#### 🤖 AI Chatbot Assistant")
-        
+    # 🤖 CHATBOT
+    if st.session_state["selected_feature"] == "chatbot":
+        st.markdown("### 🤖 Admin Intelligence")
         for m in st.session_state["chatbot_messages"]:
-            with st.chat_message(m["role"]):
-                st.write(m["content"])
-
-        prompt = st.chat_input("Ask me anything...")
-        if prompt:
-            st.session_state["chatbot_messages"].append({"role":"user","content":prompt})
-            with st.chat_message("user"):
-                st.write(prompt)
-
-            with st.spinner("Thinking..."):
-                try:
-                    user_id = st.session_state.get("user_id", "")
-                    bot_response = answer(prompt, user_id)
-                except Exception as e:
-                    bot_response = f"Sorry, I encountered an error: {str(e)}"
-
-            st.session_state["chatbot_messages"].append({"role":"assistant","content":bot_response})
+            with st.chat_message(m["role"]): st.write(m["content"])
+        p = st.chat_input("Query the system...")
+        if p:
+            st.session_state["chatbot_messages"].append({"role":"user","content":p})
+            st.rerun()
+        if st.session_state["chatbot_messages"] and st.session_state["chatbot_messages"][-1]["role"] == "user":
             with st.chat_message("assistant"):
-                st.write(bot_response)
-        
-        col_clear, _ = st.columns([1, 3])
-        with col_clear:
-            if st.button("❌ Close Chatbot", use_container_width=True):
-                st.session_state["selected_feature"] = None
-                st.rerun()
-                
-    # 👥 REGISTER FEATURE
-    elif st.session_state.get("selected_feature") == "register":
-        st.markdown("#### 👥 Register New User")
-        st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
-        st.markdown("Fill in the details below to register a new employee.")
-        
-        with st.form("register_user_form"):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                first_name = st.text_input("First Name*", help="Employee's first name")
-                last_name = st.text_input("Last Name*", help="Employee's last name")
-            
-            with col2:
-                dept_options = [(code, name) for code, name in DEPARTMENTS.items()]
-                selected_dept = st.selectbox(
-                    "Department*",
-                    options=[code for code, name in dept_options],
-                    format_func=lambda x: next(name for code, name in dept_options if code == x),
-                    help="Select the employee's department"
-                )
-                
-                role_options = [(code, name) for code, name in ROLES.items() if code != "adm"]
-                selected_role = st.selectbox(
-                    "Role*",
-                    options=[code for code, name in role_options],
-                    format_func=lambda x: next(name for code, name in role_options if code == x),
-                    help="Select the employee's role"
-                )
-            
-            st.markdown("---")
-            
-            col_submit, col_cancel = st.columns([1, 1])
-            with col_submit:
-                submitted = st.form_submit_button("✅ Create Employee Account", type="primary", use_container_width=True)
-            with col_cancel:
-                if st.form_submit_button("❌ Close", use_container_width=True):
-                    st.session_state["selected_feature"] = None
-                    st.rerun()
-            
-            if submitted:
-                if first_name and last_name and selected_dept and selected_role:
-                    success, message, login_id, initial_password = register_user(
-                        first_name, last_name, selected_dept, selected_role
-                    )
-                    
-                    if success:
-                        st.success(f"✅ {message}")
-                        
-                        st.markdown("#### 🔑 Generated Credentials")
-                        st.markdown(f"""
-                        <div style="background-color: #f0f2f5; padding: 1rem; border-radius: 8px;">
-                            <p><strong>Login ID:</strong> <code>{login_id}</code></p>
-                            <p><strong>Initial Password:</strong> <code>{initial_password}</code></p>
-                            <p><strong>Department:</strong> {DEPARTMENTS[selected_dept]}</p>
-                            <p><strong>Role:</strong> {ROLES[selected_role]}</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        st.info("📋 Please share these credentials with the employee. They will need to change their password on first login.")
-                    else:
-                        st.error(f"❌ {message}")
-                else:
-                    st.error("❌ Please fill in all required fields.")
-                    
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    # 📋 VIEW DIRECTORY FEATURE
-    elif st.session_state.get("selected_feature") == "view":
-        st.markdown("#### 📋 Team Directory")
-        st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
-        
-        admin_dept = st.session_state.get('department_code')
-        users_col = get_users_collection()
-        
-        num_users = users_col.count_documents({"department_code": admin_dept, "role": {"$ne": "admin"}})
-        st.markdown(f"**Total users under your department ({DEPARTMENTS.get(admin_dept, 'N/A')}):** {num_users}")
-        
-        dept_users = list(users_col.find({"department_code": admin_dept, "role": {"$ne": "admin"}}, {"password_hash": 0}).sort("created_at", -1))
-        
-        if dept_users:
-            header = st.columns([2, 2, 3, 2])
-            for col, label in zip(header, ["First Name", "Last Name", "Login ID", "Role"]):
-                col.markdown(f"**{label}**")
-            st.divider()
-            
-            for u in dept_users:
-                row = st.columns([2, 2, 3, 2])
-                row[0].write(u.get("first_name", "N/A"))
-                row[1].write(u.get("last_name", "N/A"))
-                row[2].write(f"`{u.get('login_id', 'N/A')}`")
-                row[3].write(u.get("role", "N/A"))
-                
-                with st.expander(f"Details for {u.get('first_name', '')}"):
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.write(f"**Created At:** {u.get('created_at', 'N/A')}")
-                        password_status = "✅ Changed" if u.get('password_changed', False) else "⚠️ Not Changed"
-                        st.write(f"**Password Status:** {password_status}")
-                    with c2:
-                        st.write(f"**Initial Password:** `{u.get('login_id', 'N/A')}`")
-                        if st.button(f"📋 Copy Credentials", key=f"copy_{u.get('_id', u.get('login_id'))}"):
-                            credentials = f"Login ID: {u.get('login_id', 'N/A')}\nPassword: {u.get('login_id', 'N/A')}"
-                            st.code(credentials)
-                            st.success("Credentials ready!")
-        else:
-            st.info("No users found in your department.")
-            
-        col_clear, _ = st.columns([1, 1])
-        with col_clear:
-            if st.button("❌ Close Directory", use_container_width=True):
-                st.session_state["selected_feature"] = None
-                st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    # ⚙️ SETTINGS FEATURE
-    elif st.session_state.get("selected_feature") == "settings":
-        st.markdown("#### ⚙️ Settings")
-        st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
-        
-        st.markdown("**👤 Profile Information**")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"**Name:** {st.session_state.get('first_name', '')} {st.session_state.get('last_name', '')}")
-            st.markdown(f"**Login ID:** {st.session_state.get('login_id', 'N/A')}")
-        with col2:
-            st.markdown(f"**Department:** {st.session_state.get('department', 'N/A')}")
-            st.markdown(f"**Role:** {st.session_state.get('role', 'N/A')}")
-        
-        st.markdown("---")
-        st.markdown("**🔐 Security Settings**")
-        st.markdown("**Change Password**")
-        with st.expander("🔑 Change Your Password"):
-            with st.form("change_password_form"):
-                current_password = st.text_input("Current Password", type="password")
-                new_password = st.text_input("New Password", type="password")
-                confirm_password = st.text_input("Confirm New Password", type="password")
-                
-                submitted = st.form_submit_button("🔐 Update Password", type="primary")
-                
-                if submitted:
-                    if current_password and new_password and confirm_password:
-                        login_id = st.session_state.get('login_id')
-                        success, message = change_password(login_id, current_password, new_password, confirm_password)
-                        
-                        if success:
-                            st.success(f"✅ {message}")
-                            st.session_state["password_changed"] = True
-                        else:
-                            st.error(f"❌ {message}")
-                    else:
-                        st.error("❌ Please fill in all password fields.")
-        
-        st.markdown("---")
-        col_save, col_clear = st.columns([1, 1])
-        with col_save:
-            if st.button("💾 Save Settings", type="primary", use_container_width=True):
-                st.success("Settings saved successfully!")
-        with col_clear:
-            if st.button("❌ Close Settings", use_container_width=True):
-                st.session_state["selected_feature"] = None
-                st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+                with st.spinner("Processing..."):
+                    resp = answer(st.session_state["chatbot_messages"][-1]["content"], st.session_state.get("user_id", ""))
+                    st.session_state["chatbot_messages"].append({"role":"assistant","content":resp})
+                    st.write(resp); st.rerun()
+
+    # 👥 REGISTER
+    elif st.session_state["selected_feature"] == "register":
+        st.markdown("### 👥 Employee Registration")
+        with st.form("reg_form"):
+            c1, c2 = st.columns(2)
+            fn = c1.text_input("First Name")
+            ln = c1.text_input("Last Name")
+            dept = c2.selectbox("Department", options=list(DEPARTMENTS.keys()), format_func=lambda x: DEPARTMENTS[x])
+            role = c2.selectbox("Role", options=[r for r in ROLES.keys() if r != "adm"], format_func=lambda x: ROLES[x])
+            if st.form_submit_button("CREATE ACCOUNT"):
+                if fn and ln:
+                    s, m, l_id, pwd = register_user(fn, ln, dept, role)
+                    if s: st.success(f"✅ Created: {l_id} (Temp Password: {pwd})")
+                    else: st.error(m)
+                else: st.warning("Fill all fields")
+
+    # 📋 DIRECTORY
+    elif st.session_state["selected_feature"] == "view":
+        st.markdown("### 📋 Organizational Directory")
+        users = get_registered_users(st.session_state.get("department_code"))
+        if users:
+            st.table([{"Name": f"{u['first_name']} {u['last_name']}", "ID": u['login_id'], "Role": u.get('role', 'N/A')} for u in users])
+        else: st.info("No matching employees.")
+
+    # ⚙️ SETTINGS
+    elif st.session_state["selected_feature"] == "settings":
+        st.markdown("### ⚙️ Admin Configuration")
+        with st.expander("🔐 Security"):
+            with st.form("pwd_form"):
+                curr = st.text_input("Current", type="password")
+                new = st.text_input("New", type="password")
+                if st.form_submit_button("CHANGE PWD"):
+                    r, msg = change_password(st.session_state.get("login_id"), curr, new, new)
+                    if r: st.success(msg)
+                    else: st.error(msg)
+
+    if st.button("❌ CLOSE COMPONENT"):
+        st.session_state["selected_feature"] = None
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
