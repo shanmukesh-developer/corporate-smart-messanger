@@ -10,13 +10,14 @@ if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
 if ROOT not in sys.path: sys.path.insert(0, ROOT)
 
 try:
-    from styles import SHARED_CSS
-    from database import get_user_events
-except ImportError:
-    sys.path.append(os.path.join(os.getcwd(), "backend"))
-    sys.path.append(os.getcwd())
-    from styles import SHARED_CSS
-    from database import get_user_events
+    from styles import SHARED_CSS # type: ignore
+    from database import get_user_events # type: ignore
+except (ImportError, ModuleNotFoundError):
+    try:
+        from frontend.styles import SHARED_CSS # type: ignore
+        from backend.database import get_user_events # type: ignore
+    except:
+        pass
 
 def get_base64_bin_file(bin_file):
     with open(bin_file, 'rb') as f:

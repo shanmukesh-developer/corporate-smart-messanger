@@ -8,13 +8,14 @@ if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
 if ROOT not in sys.path: sys.path.insert(0, ROOT)
 
 try:
-    from styles import SHARED_CSS
-    from auth import change_password
-except ImportError:
-    sys.path.append(os.path.join(os.getcwd(), "backend"))
-    sys.path.append(os.getcwd())
-    from styles import SHARED_CSS
-    from auth import change_password
+    from styles import SHARED_CSS # type: ignore
+    from auth import change_password # type: ignore
+except (ImportError, ModuleNotFoundError):
+    try:
+        from frontend.styles import SHARED_CSS # type: ignore
+        from backend.auth import change_password # type: ignore
+    except:
+        pass
 
 st.set_page_config(page_title="Security Center – CSM", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)

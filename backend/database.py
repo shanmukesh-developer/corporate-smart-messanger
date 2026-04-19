@@ -1,22 +1,24 @@
 import os
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
-from dotenv import load_dotenv
-from datetime import datetime, timezone
-import uuid
 import sys
+import uuid
+from datetime import datetime, timezone
+from pymongo import MongoClient # type: ignore
+from pymongo.errors import OperationFailure, ServerSelectionTimeoutError # type: ignore
+from dotenv import load_dotenv # type: ignore
 
-# Ensure backend directory is in path for imports
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
-if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Robust Path Injection
+CWD = os.getcwd()
+if CWD not in sys.path: sys.path.insert(0, CWD)
+BACKEND_DIR = os.path.join(CWD, "backend")
+if BACKEND_DIR not in sys.path: sys.path.insert(0, BACKEND_DIR)
 
 try:
-    import local_db
-except ImportError:
-    from . import local_db
+    import local_db # type: ignore
+except (ImportError, ModuleNotFoundError):
+    try:
+        from backend import local_db # type: ignore
+    except ImportError:
+        import backend.local_db as local_db # type: ignore
 
 load_dotenv()
 

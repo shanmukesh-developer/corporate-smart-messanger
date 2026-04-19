@@ -3,11 +3,11 @@ import streamlit as st
 import base64
 from datetime import timezone, datetime
 
-# Robust Path Resolution
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BACKEND = os.path.join(ROOT, "backend")
-if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
-if ROOT not in sys.path: sys.path.insert(0, ROOT)
+# Robust IDE-Proof Path Injection
+CWD = os.getcwd()
+if CWD not in sys.path: sys.path.insert(0, CWD)
+BACKEND_DIR = os.path.join(CWD, "backend")
+if BACKEND_DIR not in sys.path: sys.path.insert(0, BACKEND_DIR)
 
 try:
     from styles import SHARED_CSS
@@ -17,17 +17,17 @@ try:
         create_group_conversation, get_registered_users
     )
     from streamlit_autorefresh import st_autorefresh
-except ImportError:
-    # Manual fallback
-    sys.path.append(os.path.join(os.getcwd(), "backend"))
-    sys.path.append(os.getcwd())
-    from styles import SHARED_CSS
-    from database import (
-        get_user_conversations, get_messages, send_message, 
-        get_all_users_for_chat, get_or_create_direct_conversation, 
-        create_group_conversation, get_registered_users
-    )
-    from streamlit_autorefresh import st_autorefresh
+except (ImportError, ModuleNotFoundError):
+    try:
+        from frontend.styles import SHARED_CSS
+        from backend.database import (
+            get_user_conversations, get_messages, send_message, 
+            get_all_users_for_chat, get_or_create_direct_conversation, 
+            create_group_conversation, get_registered_users
+        )
+        from streamlit_autorefresh import st_autorefresh
+    except:
+        pass
 
 # Helper for background
 def get_base64_bin_file(bin_file):
@@ -38,8 +38,8 @@ def get_base64_bin_file(bin_file):
 st.set_page_config(page_title="Messages - CSM", page_icon="💬", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
-# LOAD BACKGROUND (VFX)
-bg_path = os.path.join(ROOT, "frontend", "assets", "bg.png")
+# LOAD BACKGROUND# BG VFX
+bg_path = os.path.join(CWD, "frontend", "assets", "bg.png")
 if os.path.exists(bg_path):
     bin_str = get_base64_bin_file(bg_path)
     st.markdown(f"""

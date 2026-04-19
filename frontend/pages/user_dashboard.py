@@ -2,16 +2,23 @@ import sys, os
 import streamlit as st
 import base64
 
-# Robust Path Resolution
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BACKEND = os.path.join(ROOT, "backend")
-if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
-if ROOT not in sys.path: sys.path.insert(0, ROOT)
+# Robust IDE-Proof Path Injection
+CWD = os.getcwd()
+if CWD not in sys.path: sys.path.insert(0, CWD)
+BACKEND_DIR = os.path.join(CWD, "backend")
+if BACKEND_DIR not in sys.path: sys.path.insert(0, BACKEND_DIR)
 
 try:
-    from styles import SHARED_CSS
-    from auth import change_password
-    from rag_assistant import answer
+    from styles import SHARED_CSS # type: ignore
+    from auth import change_password # type: ignore
+    from rag_assistant import answer # type: ignore
+except (ImportError, ModuleNotFoundError):
+    try:
+        from frontend.styles import SHARED_CSS # type: ignore
+        from backend.auth import change_password # type: ignore
+        from backend.rag_assistant import answer # type: ignore
+    except:
+        pass
 except ImportError:
     # Manual fallback for IDE visibility
     sys.path.append(os.path.join(os.getcwd(), "backend"))
@@ -29,8 +36,8 @@ def get_base64_bin_file(bin_file):
 st.set_page_config(page_title="User Dashboard – CSM", page_icon="💬", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
-# LOAD BACKGROUND
-bg_path = os.path.join(ROOT, "frontend", "assets", "bg.png")
+# BG VFX
+bg_path = os.path.join(CWD, "frontend", "assets", "bg.png")
 if os.path.exists(bg_path):
     bin_str = get_base64_bin_file(bg_path)
     st.markdown(f"""

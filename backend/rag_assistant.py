@@ -1,19 +1,20 @@
-from dotenv import load_dotenv
-import os
-import sys
-from groq import Groq
+import sys, os
+from dotenv import load_dotenv # type: ignore
+from groq import Groq # type: ignore
 
-# Ensure backend directory is in path for imports
-backend_dir = os.path.dirname(os.path.abspath(__file__))
-if backend_dir not in sys.path:
-    sys.path.append(backend_dir)
+# Robust IDE-Proof Path Injection
+CWD = os.getcwd()
+if CWD not in sys.path: sys.path.insert(0, CWD)
+BACKEND_DIR = os.path.join(CWD, "backend")
+if BACKEND_DIR not in sys.path: sys.path.insert(0, BACKEND_DIR)
 
 try:
-    from database import get_messages, get_conversations_collection
-except ImportError:
-    from .database import get_messages, get_conversations_collection
-
-# Load environment variables
+    from database import get_messages, get_conversations_collection # type: ignore
+except (ImportError, ModuleNotFoundError):
+    try:
+        from backend.database import get_messages, get_conversations_collection # type: ignore
+    except:
+        pass
 load_dotenv()
 
 # Initialize Groq client

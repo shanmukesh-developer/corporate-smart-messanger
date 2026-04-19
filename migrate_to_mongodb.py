@@ -4,8 +4,8 @@ Migration script to move local JSON data to MongoDB
 import json
 import os
 from pathlib import Path
-from pymongo import MongoClient
-from dotenv import load_dotenv
+from pymongo import MongoClient # type: ignore
+from dotenv import load_dotenv # type: ignore
 from datetime import datetime, timezone
 
 load_dotenv()
