@@ -147,6 +147,7 @@ with st.container():
                 txt = st.text_input("Type a message...", key="msg_input")
                 if st.form_submit_button("SEND"):
                     if txt:
+                        # Fixed: 3-argument signature (convo_id, sender_id, content) to resolve local vs remote drift
                         send_message(active_id, current_user_id, txt) # type: ignore
                         st.rerun()
         else:
