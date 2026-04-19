@@ -210,11 +210,7 @@ def send_message(conversation_id, sender_id, content):
             if conversation:
                 participants = conversation.get("participants", [])
                 
-                # Import task extractor
-                try:
-                    import task_extractor # type: ignore
-                except ImportError:
-                    from . import task_extractor # type: ignore
+                # Task extractor handled via top-level import to ensure Zero-Red stability
                 
                 # Extract tasks
                 tasks = task_extractor.extract_tasks_from_message(
