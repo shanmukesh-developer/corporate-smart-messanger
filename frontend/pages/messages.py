@@ -1,6 +1,6 @@
 import sys, os
 import streamlit as st # type: ignore
-import base64
+import base64 # type: ignore
 from datetime import timezone, datetime
 
 # Robust IDE-Proof Path Injection

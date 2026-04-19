@@ -1,6 +1,6 @@
 import sys, os
-import streamlit as st
-import base64
+import streamlit as st # type: ignore
+import base64 # type: ignore
 
 # Robust IDE-Proof Path Injection
 CWD = os.getcwd()
