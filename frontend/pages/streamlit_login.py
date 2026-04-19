@@ -16,8 +16,8 @@ except ImportError:
     # Fallback for complex IDE environments
     sys.path.append(os.path.join(os.getcwd(), "backend"))
     sys.path.append(os.getcwd())
-    from styles import SHARED_CSS
-    from auth import login_user
+    from styles import SHARED_CSS # type: ignore
+    from auth import login_user # type: ignore
 
 st.set_page_config(
     page_title="Corporate Smart Messenger",
@@ -29,16 +29,25 @@ st.set_page_config(
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # LOAD BACKGROUND
-bg_path = os.path.join(CWD if 'CWD' in locals() else os.getcwd(), "frontend", "assets", "bg.png")
-if os.path.exists(bg_path):
-    import base64
-    with open(bg_path, "rb") as f:
-        bin_str = base64.b64encode(f.read()).decode()
+bg_path = r"C:\Users\Shanmukh\.gemini\antigravity\brain\c3b5482f-7dac-4b8f-8f4a-837dec3830d4\premium_corporate_background_1776631368914.png"
+logo_path = r"C:\Users\Shanmukh\.gemini\antigravity\brain\c3b5482f-7dac-4b8f-8f4a-837dec3830d4\corporate_messenger_logo_1776631382023.png"
+
+import base64
+def img_to_b64(path):
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return ""
+
+bg_b64 = img_to_b64(bg_path)
+logo_b64 = img_to_b64(logo_path)
+
+if bg_b64:
     st.markdown(f"""
     <style>
     .stApp {{
-        background: linear-gradient(rgba(10, 14, 26, 0.9), rgba(10, 14, 26, 0.9)), 
-                    url("data:image/png;base64,{bin_str}");
+        background: linear-gradient(rgba(10, 14, 26, 0.8), rgba(10, 14, 26, 0.8)), 
+                    url("data:image/png;base64,{bg_b64}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -56,8 +65,16 @@ if st.session_state.get("logged_in"):
 # Main Container
 st.markdown("<div class='vfx-fade-in'>", unsafe_allow_html=True)
 
-st.markdown("<h1 style='font-size: 3rem; margin-bottom: 0;'>🏢 CSM</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; margin-bottom: 2rem;'>The Future of Corporate Connectivity</p>", unsafe_allow_html=True)
+if logo_b64:
+    st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 0;">
+            <img src="data:image/png;base64,{logo_b64}" width="120" class="vfx-pulse">
+        </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("<h1 style='font-size: 3rem; margin-bottom: 0; text-align: center;'>🏢 CSM</h1>", unsafe_allow_html=True)
+
+st.markdown("<p style='text-align: center; margin-bottom: 2rem; color: var(--primary-gold); letter-spacing: 2px; font-weight: 600;'>CORPORATE SMART MESSENGER</p>", unsafe_allow_html=True)
 
 # Login Card
 with st.container():

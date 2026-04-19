@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 import uuid
+from typing import Any, cast # type: ignore
 
 # Data directory
 DATA_DIR = Path(__file__).parent / "local_data"
@@ -159,7 +160,7 @@ class LocalMessagesCollection:
             messages = sorted(messages, key=lambda x: str(x.get(field, "")), reverse=(direction == -1))
         
         if limit:
-            messages = messages[:limit]
+            messages = cast(Any, messages)[:limit]
         return messages
     
     def insert_one(self, msg_data):
@@ -223,7 +224,7 @@ class LocalEventsCollection:
         events = load_json_file(EVENTS_FILE)
         for i, event in enumerate(events):
             if query.get("_id") and str(event.get("_id")) == str(query["_id"]):
-                del events[i]
+                cast(Any, events).pop(i)
                 save_json_file(EVENTS_FILE, events)
                 return MockResult(deleted_count=1)
         return MockResult(deleted_count=0)
@@ -241,6 +242,19 @@ def initialize_sample_data():
                 "email": "admin@company.com",
                 "department": "Development",
                 "department_code": "dev",
+                "role": "Admin",
+                "role_code": "adm",
+                "password_changed": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            },
+            {
+                "login_id": "hrsadm000000",
+                "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.Gm.F5e",  # hrsadm000000
+                "first_name": "HR",
+                "last_name": "Admin",
+                "email": "hr@company.com",
+                "department": "Human Resources",
+                "department_code": "hrs",
                 "role": "Admin",
                 "role_code": "adm",
                 "password_changed": False,

@@ -28,7 +28,7 @@ st.set_page_config(page_title="Calendar - CSM", page_icon="📅", layout="wide",
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # BG VFX
-bg_path = os.path.join(ROOT, "frontend", "assets", "bg.png")
+bg_path = r"C:\Users\Shanmukh\.gemini\antigravity\brain\c3b5482f-7dac-4b8f-8f4a-837dec3830d4\premium_corporate_background_1776631368914.png"
 if os.path.exists(bg_path):
     bin_str = get_base64_bin_file(bg_path)
     st.markdown(f"""

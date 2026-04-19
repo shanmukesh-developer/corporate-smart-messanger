@@ -37,7 +37,7 @@ st.set_page_config(page_title="User Dashboard – CSM", page_icon="💬", layout
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # BG VFX
-bg_path = os.path.join(CWD, "frontend", "assets", "bg.png")
+bg_path = r"C:\Users\Shanmukh\.gemini\antigravity\brain\c3b5482f-7dac-4b8f-8f4a-837dec3830d4\premium_corporate_background_1776631368914.png"
 if os.path.exists(bg_path):
     bin_str = get_base64_bin_file(bg_path)
     st.markdown(f"""
@@ -74,31 +74,40 @@ with col_logout:
 
 st.divider()
 
-# ICON-BASED TILE GRID (GLASSMORPHISM)
+# ICON-BASED TILE GRID (ELITE QUALITY)
 def feature_tile(label, icon, key):
     st.markdown(f"""
-    <div class="glass-card vfx-fade-in" style="text-align: center; padding: 1.5rem; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <div style="font-size: 3rem; margin-bottom: 0.5rem;">{icon}</div>
-        <div style="color: var(--primary-gold); font-weight: 700; font-size: 1.2rem;">{label}</div>
+    <div class="glass-card vfx-fade-in" style="text-align: center; height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="tile-icon">{icon}</div>
+        <div style="color: var(--primary-gold); font-weight: 800; font-size: 1.3rem; letter-spacing: 1px;">{label}</div>
     </div>
     """, unsafe_allow_html=True)
     if st.button(f"OPEN {label}", key=key, use_container_width=True):
         return True
     return False
 
+# --- ELITE USER WIDGETS ---
+st.markdown("<div class='vfx-fade-in'>", unsafe_allow_html=True)
+w1, w2, w3 = st.columns(3)
+with w1: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>UNREAD SIGNALS</div><div style='font-size: 1.8rem; font-weight: 800;'>4</div></div>", unsafe_allow_html=True)
+with w2: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>PENDING TASKS</div><div style='font-size: 1.8rem; font-weight: 800;'>12</div></div>", unsafe_allow_html=True)
+with w3: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>NETWORK RANK</div><div style='font-size: 1.8rem; font-weight: 800;'>TOP 5%</div></div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
+
 row1_col1, row1_col2 = st.columns(2)
 row2_col1, row2_col2 = st.columns(2)
 
 with row1_col1:
-    if feature_tile("MESSAGES", "💬", "btn_msg"): st.switch_page("pages/messages.py")
+    if feature_tile("MESSAGES", "⚡", "btn_msg"): st.switch_page("pages/messages.py")
 with row1_col2:
-    if feature_tile("CALENDAR", "📅", "btn_cal"): st.switch_page("pages/calendar.py")
+    if feature_tile("CALENDAR", "🌌", "btn_cal"): st.switch_page("pages/calendar.py")
 with row2_col1:
-    if feature_tile("AI ASSISTANT", "🤖", "btn_ai"):
+    if feature_tile("NEURAL ASSISTANT", "🧠", "btn_ai"):
         st.session_state["selected_feature"] = "chatbot"
         st.rerun()
 with row2_col2:
-    if feature_tile("SETTINGS", "⚙️", "btn_set"):
+    if feature_tile("WORK PROTOCOLS", "⚙️", "btn_set"):
         st.session_state["selected_feature"] = "settings"
         st.rerun()
 

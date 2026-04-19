@@ -20,6 +20,22 @@ except (ImportError, ModuleNotFoundError):
 st.set_page_config(page_title="Security Center – CSM", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
+# BG VFX
+bg_path = r"C:\Users\Shanmukh\.gemini\antigravity\brain\c3b5482f-7dac-4b8f-8f4a-837dec3830d4\premium_corporate_background_1776631368914.png"
+import base64
+if os.path.exists(bg_path):
+    with open(bg_path, 'rb') as f:
+        bin_str = base64.b64encode(f.read()).decode()
+    st.markdown(f"""
+    <style>
+    .stApp {{
+        background: linear-gradient(rgba(10, 14, 26, 0.9), rgba(10, 14, 26, 0.9)), 
+                    url("data:image/png;base64,{bin_str}");
+        background-size: cover; background-attachment: fixed;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
 if not st.session_state.get("logged_in"): st.switch_page("pages/streamlit_login.py")
 
 st.markdown("<div class='vfx-fade-in'><h1>🔐 Security Protocol</h1></div>", unsafe_allow_html=True)

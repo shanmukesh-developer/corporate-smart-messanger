@@ -11,6 +11,7 @@ try:
     import task_extractor # type: ignore
 except:
     pass
+from typing import Any, cast # type: ignore
 
 # Robust Path Injection
 CWD = os.getcwd()
@@ -88,7 +89,7 @@ def get_next_sequence_number(department_code, role_code):
             last_user = None
     
     if last_user:
-        last_number = int(last_user["login_id"][-6:])
+        last_number = int(cast(Any, last_user["login_id"])[-6:])
         return last_number + 1
     else:
         return 1
@@ -150,7 +151,8 @@ def get_or_create_direct_conversation(id1, id2):
 def create_group_conversation(creator_id, name, participants):
     """Create a new group conversation"""
     convos = get_conversations_collection()
-    convo_id = f"group_{uuid4().hex[:8]}"
+    unique_id = uuid4().hex
+    convo_id = f"group_{unique_id}"
     
     # Ensure creator is in participants
     if creator_id not in participants:
@@ -169,9 +171,39 @@ def create_group_conversation(creator_id, name, participants):
     return new_convo
 
 def get_messages(conversation_id):
-    """Get all messages for a conversation"""
-    msgs = get_messages_collection()
-    return list(msgs.find({"conversation_id": conversation_id}).sort("timestamp", 1))
+    """Get all messages for a conversation with sender names included"""
+    msgs_col = get_messages_collection()
+    # MongoDB returns a cursor, LocalDB returns a list. 
+    # Use find().sort() which is supported by both (mocked in LocalDB).
+    cursor = msgs_col.find({"conversation_id": conversation_id})
+    
+    # Handle sorting which differs slightly between pymongo and local_db mock
+    try:
+        messages = list(cursor.sort("timestamp", 1))
+    except (AttributeError, TypeError):
+        # Fallback for local_db list or if sort fails
+        messages = list(cursor)
+        messages.sort(key=lambda x: x.get("timestamp", ""))
+
+    # Fetch unique sender names to avoid multiple lookups
+    if not messages:
+        return []
+        
+    users_col = get_users_collection()
+    sender_ids = list(set(m["sender_id"] for m in messages if "sender_id" in m))
+    
+    # Fetch all relevant users
+    users_data = users_col.find({"login_id": {"$in": sender_ids}})
+    user_map = {}
+    for u in users_data:
+        full_name = f"{u.get('first_name', '')} {u.get('last_name', '')}".strip()
+        user_map[u["login_id"]] = full_name or u["login_id"]
+    
+    # Attach names to messages
+    for m in messages:
+        m["sender_name"] = user_map.get(m.get("sender_id"), m.get("sender_id", "Unknown"))
+        
+    return messages
 
 def send_message(conversation_id, sender_id, content):
     """Send a message and update last_message on the conversation"""
@@ -179,9 +211,18 @@ def send_message(conversation_id, sender_id, content):
     convos = get_conversations_collection()
     
     now = datetime.now(timezone.utc)
+    # Get sender name for denormalization (improves read performance and UI stability)
+    user = get_user_by_login_id(sender_id)
+    sender_name = sender_id
+    if user:
+        first = user.get("first_name", "")
+        last = user.get("last_name", "")
+        sender_name = f"{first} {last}".strip() or sender_id
+
     msg = {
         "conversation_id": conversation_id,
         "sender_id": sender_id,
+        "sender_name": sender_name,
         "content": content,
         "timestamp": now
     }
@@ -194,7 +235,7 @@ def send_message(conversation_id, sender_id, content):
     convos.update_one(
         {"conversation_id": conversation_id},
         {"$set": {
-            "last_message": content[:50] + "..." if len(content) > 50 else content,
+            "last_message": cast(Any, content)[:50] + "..." if len(content) > 50 else content,
             "last_message_time": now
         }}
     )

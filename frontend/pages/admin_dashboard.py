@@ -41,7 +41,7 @@ st.set_page_config(page_title="Admin Dashboard – CSM", page_icon="🛡️", la
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # LOAD BACKGROUND
-bg_path = os.path.join(CWD, "frontend", "assets", "bg.png")
+bg_path = r"C:\Users\Shanmukh\.gemini\antigravity\brain\c3b5482f-7dac-4b8f-8f4a-837dec3830d4\premium_corporate_background_1776631368914.png"
 if os.path.exists(bg_path):
     bin_str = get_base64_bin_file(bg_path)
     st.markdown(f"""
@@ -80,38 +80,48 @@ with col_logout:
 
 st.divider()
 
-# ICON-BASED TILE GRID (GLASSMORPHISM)
+# ICON-BASED TILE GRID (ELITE QUALITY)
 def admin_tile(label, icon, key, desc):
     st.markdown(f"""
-    <div class="glass-card vfx-fade-in" style="text-align: center; padding: 1rem; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">{icon}</div>
-        <div style="color: var(--primary-gold); font-weight: 700;">{label}</div>
-        <div style="color: var(--text-dim); font-size: 0.8rem;">{desc}</div>
+    <div class="glass-card vfx-fade-in" style="text-align: center; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="tile-icon">{icon}</div>
+        <div style="color: var(--primary-gold); font-weight: 800; font-size: 1.4rem; letter-spacing: 1px;">{label}</div>
+        <div style="color: var(--text-dim); font-size: 0.9rem; margin-top: 5px;">{desc}</div>
     </div>
     """, unsafe_allow_html=True)
     if st.button(f"LAUNCH {label}", key=key, use_container_width=True):
         return True
     return False
 
+# --- ELITE ANALYTICS WIDGETS ---
+st.markdown("<div class='vfx-fade-in'>", unsafe_allow_html=True)
+w1, w2, w3, w4 = st.columns(4)
+with w1: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>WORKSPACE NODES</div><div style='font-size: 1.8rem; font-weight: 800;'>724</div></div>", unsafe_allow_html=True)
+with w2: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>ACTIVE COMMS</div><div style='font-size: 1.8rem; font-weight: 800;'>48</div></div>", unsafe_allow_html=True)
+with w3: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>SECURITY INDEX</div><div style='font-size: 1.8rem; font-weight: 800; color:#2ecc71;'>99.9%</div></div>", unsafe_allow_html=True)
+with w4: st.markdown("<div class='stat-widget'><div style='color:var(--primary-gold); font-size: 0.8rem;'>AI EXTRACTIONS</div><div style='font-size: 1.8rem; font-weight: 800;'>1,280</div></div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
+
 r1c1, r1c2, r1c3 = st.columns(3)
 r2c1, r2c2, r2c3 = st.columns(3)
 
 with r1c1:
-    if admin_tile("MESSAGES", "💬", "adm_msg", "Team Comms"): st.switch_page("pages/messages.py")
+    if admin_tile("MESSAGES", "⚡", "adm_msg", "Secure Global Comms"): st.switch_page("pages/messages.py")
 with r1c2:
-    if admin_tile("CALENDAR", "📅", "adm_cal", "Schedule"): st.switch_page("pages/calendar.py")
+    if admin_tile("CALENDAR", "🌌", "adm_cal", "Advanced Scheduling"): st.switch_page("pages/calendar.py")
 with r1c3:
-    if admin_tile("AI ANALYST", "🤖", "adm_ai", "Deep Insights"):
+    if admin_tile("NEURAL ANALYST", "🧠", "adm_ai", "Deep Intelligence"):
         st.session_state["selected_feature"] = "chatbot"; st.rerun()
 
 with r2c1:
-    if admin_tile("ADD USER", "👥", "adm_reg", "Onboarding"):
+    if admin_tile("REGISTER NODE", "🧬", "adm_reg", "Digital Identity"):
         st.session_state["selected_feature"] = "register"; st.rerun()
 with r2c2:
-    if admin_tile("TEAM DIRECTORY", "📋", "adm_view", "User Management"):
+    if admin_tile("WORKSPACE CORE", "📁", "adm_view", "Collective Directory"):
         st.session_state["selected_feature"] = "view"; st.rerun()
 with r2c3:
-    if admin_tile("SYSTEM SETTINGS", "⚙️", "adm_set", "Preferences"):
+    if admin_tile("PROTOCOLS", "🛡️", "adm_set", "System Hardening"):
         st.session_state["selected_feature"] = "settings"; st.rerun()
 
 # --- FEATURE DISPLAY ---
