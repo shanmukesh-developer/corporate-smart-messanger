@@ -2,8 +2,9 @@ import sys, os
 import streamlit as st # type: ignore
 import base64 # type: ignore
 
-# Unified Path Resolution
-ROOT = os.path.dirname(os.path.abspath(__file__))
+# Proxy Resolution - Need to reach back to root
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))
 if ROOT not in sys.path: sys.path.insert(0, ROOT)
 BACKEND = os.path.join(ROOT, "backend")
 if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
@@ -11,8 +12,8 @@ if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
 try:
     from styles import SHARED_CSS # type: ignore
     from auth import login_user # type: ignore
-except ImportError as e:
-    st.error(f"System Core Missing: {e}")
+except ImportError:
+    st.error("System Core Migration in Progress. Please refresh or run 'streamlit run app.py' from root.")
     st.stop()
 
 st.set_page_config(page_title="CSM | Secure Access", page_icon="🛡️", layout="centered")
@@ -26,9 +27,7 @@ def get_b64(p):
     return ""
 l_b64 = get_b64(logo_path)
 
-# UI Construction
 st.markdown("<div style='margin-top: -60px;'></div>", unsafe_allow_html=True)
-
 if l_b64:
     st.markdown(f'<div class="logo-container"><img src="data:image/png;base64,{l_b64}" width="140"></div>', unsafe_allow_html=True)
 
@@ -46,13 +45,12 @@ with st.container():
                 success, message, user_data = login_user(lid, pwd)
                 if success:
                     for k, v in user_data.items(): st.session_state[k] = v
-                    # Page Switching Fix
-                    if not user_data.get("password_changed"): st.switch_page("pages/change_password.py")
-                    elif user_data["role_code"] == "adm": st.switch_page("pages/admin_dashboard.py")
-                    else: st.switch_page("pages/user_dashboard.py")
+                    st.session_state["logged_in"] = True
+                    # CORRECTED PATHS for the frontend/pages/ location
+                    if not user_data.get("password_changed"): st.switch_page("../../pages/change_password.py")
+                    elif user_data["role_code"] == "adm": st.switch_page("../../pages/admin_dashboard.py")
+                    else: st.switch_page("../../pages/user_dashboard.py")
                 else:
                     st.error(f"Validation Failure: {message}")
-            else:
-                st.warning("All security fields required.")
 
-st.expander("❓ Access Assistance", expanded=False).write("Contact the CSM Command Center if you require credential synchronization.")
+st.info("💡 Note: The system has been upgraded. For the best experience, please run 'streamlit run app.py' from the root.")
