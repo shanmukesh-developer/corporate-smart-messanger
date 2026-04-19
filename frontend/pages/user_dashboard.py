@@ -121,26 +121,32 @@ if not st.session_state.get("logged_in"):
 if st.session_state.get("role") == "admin":
     st.switch_page("pages/admin_dashboard.py")
 
+# Initialize session state variables
+if "selected_feature" not in st.session_state:
+    st.session_state["selected_feature"] = None
+if "chatbot_messages" not in st.session_state:
+    st.session_state["chatbot_messages"] = []
+
 # Login success toast
 if st.session_state.pop("login_toast", False):
-    st.toast(f"✅ Login successful! Welcome, {st.session_state['first_name']}!", icon="🎉")
+    st.toast(f"✅ Login successful! Welcome, {st.session_state.get('first_name', 'User')}!", icon="🎉")
 
 # Header with user info
 col_title, col_logout = st.columns([5, 1])
 with col_title:
     st.markdown(f"## 💬 User Dashboard")
-    st.markdown(f"Welcome, **{st.session_state['first_name']} {st.session_state['last_name']}**")
+    st.markdown(f"Welcome, **{st.session_state.get('first_name', '')} {st.session_state.get('last_name', '')}**")
 with col_logout:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🚪 Logout", use_container_width=True):
-        for k in ("logged_in", "role", "first_name", "last_name"):
+        for k in ("logged_in", "role", "first_name", "last_name", "login_id", "department", "user_id"):
             st.session_state.pop(k, None)
         st.switch_page("pages/streamlit_login.py")
 
 # User information card
 st.markdown(f"""
 <div class="user-info-card">
-    <h3>👋 Welcome back, {st.session_state['first_name']}!</h3>
+    <h3>👋 Welcome back, {st.session_state.get('first_name', 'User')}!</h3>
     <p><strong>🏢 Department:</strong> {st.session_state.get('department', 'N/A')}</p>
     <p><strong>💼 Role:</strong> {st.session_state.get('role', 'N/A')}</p>
     <p><strong>🔑 Login ID:</strong> {st.session_state.get('login_id', 'N/A')}</p>
@@ -171,93 +177,99 @@ with row2_col2:
         st.session_state["selected_feature"] = "settings"
         st.rerun()
 
-        st.markdown("#### 🤖 AI Chatbot Assistant")
-        if "chatbot_messages" not in st.session_state:
-            st.session_state["chatbot_messages"] = []
+# --- FEATURE DISPLAY AREA ---
+st.markdown("<br>", unsafe_allow_html=True)
 
-        for m in st.session_state["chatbot_messages"]:
-            with st.chat_message(m["role"]):
-                st.write(m["content"])
+# 🤖 CHATBOT FEATURE
+if st.session_state.get("selected_feature") == "chatbot":
+    st.markdown("---")
+    st.markdown("#### 🤖 AI Chatbot Assistant")
+    
+    for m in st.session_state["chatbot_messages"]:
+        with st.chat_message(m["role"]):
+            st.write(m["content"])
 
-        prompt = st.chat_input("Ask me anything...")
-        if prompt:
-            st.session_state["chatbot_messages"].append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.write(prompt)
+    prompt = st.chat_input("Ask me anything...")
+    if prompt:
+        st.session_state["chatbot_messages"].append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
 
-            with st.spinner("Thinking..."):
-                try:
-                    user_id = st.session_state.get("user_id", "")
-                    bot_response = answer(prompt, user_id)
-                except Exception as e:
-                    bot_response = f"Sorry, I encountered an error: {str(e)}"
+        with st.spinner("Thinking..."):
+            try:
+                user_id = st.session_state.get("user_id", "")
+                bot_response = answer(prompt, user_id)
+            except Exception as e:
+                bot_response = f"Sorry, I encountered an error: {str(e)}"
 
-            st.session_state["chatbot_messages"].append({"role": "assistant", "content": bot_response})
-            with st.chat_message("assistant"):
-                st.write(bot_response)
+        st.session_state["chatbot_messages"].append({"role": "assistant", "content": bot_response})
+        with st.chat_message("assistant"):
+            st.write(bot_response)
 
-        col_clear, _ = st.columns([1, 3])
-        with col_clear:
-            if st.button("Clear Selection", use_container_width=True):
-                st.session_state.pop("selected_feature", None)
-                st.rerun()
+    col_clear, _ = st.columns([1, 3])
+    with col_clear:
+        if st.button("❌ Close Chatbot", use_container_width=True):
+            st.session_state["selected_feature"] = None
+            st.rerun()
 
-    elif st.session_state["selected_feature"] == "settings":
-        st.markdown("#### ⚙️ Settings")
-        st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
+# ⚙️ SETTINGS FEATURE
+elif st.session_state.get("selected_feature") == "settings":
+    st.markdown("---")
+    st.markdown("#### ⚙️ Settings")
+    st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
 
-        st.markdown("**👤 Profile Information**")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"**Name:** {st.session_state['first_name']} {st.session_state['last_name']}")
-            st.markdown(f"**Login ID:** {st.session_state.get('login_id', 'N/A')}")
-        with col2:
-            st.markdown(f"**Department:** {st.session_state.get('department', 'N/A')}")
-            st.markdown(f"**Role:** {st.session_state.get('role', 'N/A')}")
+    st.markdown("**👤 Profile Information**")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"**Name:** {st.session_state.get('first_name', '')} {st.session_state.get('last_name', '')}")
+        st.markdown(f"**Login ID:** {st.session_state.get('login_id', 'N/A')}")
+    with col2:
+        st.markdown(f"**Department:** {st.session_state.get('department', 'N/A')}")
+        st.markdown(f"**Role:** {st.session_state.get('role', 'N/A')}")
 
-        st.markdown("---")
-        st.markdown("**🔐 Security Settings**")
-        st.markdown("**Change Password**")
-        with st.expander("🔑 Change Your Password"):
-            with st.form("change_password_form"):
-                current_password = st.text_input("Current Password", type="password")
-                new_password = st.text_input("New Password", type="password")
-                confirm_password = st.text_input("Confirm New Password", type="password")
+    st.markdown("---")
+    st.markdown("**🔐 Security Settings**")
+    st.markdown("**Change Password**")
+    with st.expander("🔑 Change Your Password"):
+        with st.form("change_password_form"):
+            current_password = st.text_input("Current Password", type="password")
+            new_password = st.text_input("New Password", type="password")
+            confirm_password = st.text_input("Confirm New Password", type="password")
 
-                submitted = st.form_submit_button("Change Password", type="primary")
+            submitted = st.form_submit_button("Change Password", type="primary")
 
-                if submitted:
-                    if current_password and new_password and confirm_password:
-                        login_id = st.session_state.get('login_id')
-                        success, message = change_password(login_id, current_password, new_password, confirm_password)
-                        if success:
-                            st.success(f"✅ {message}")
-                            st.session_state["password_changed"] = True
-                        else:
-                            st.error(f"❌ {message}")
+            if submitted:
+                if current_password and new_password and confirm_password:
+                    login_id = st.session_state.get('login_id')
+                    success, message = change_password(login_id, current_password, new_password, confirm_password)
+                    if success:
+                        st.success(f"✅ {message}")
+                        st.session_state["password_changed"] = True
                     else:
-                        st.error("❌ Please fill in all password fields.")
+                        st.error(f"❌ {message}")
+                else:
+                    st.error("❌ Please fill in all password fields.")
 
-        st.markdown("---")
-        st.markdown("**🔔 Notification Preferences**")
-        col1, col2 = st.columns(2)
-        with col1:
-            email_notifications = st.checkbox("Email notifications", value=True)
-        with col2:
-            push_notifications = st.checkbox("Push notifications", value=True)
+    st.markdown("---")
+    st.markdown("**🔔 Notification Preferences**")
+    col1, col2 = st.columns(2)
+    with col1:
+        email_notifications = st.checkbox("Email notifications", value=True)
+    with col2:
+        push_notifications = st.checkbox("Push notifications", value=True)
 
-        st.markdown("---")
-        st.markdown("**🎨 Appearance**")
-        theme = st.selectbox("Theme", ["Light", "Dark"], index=0)
+    st.markdown("---")
+    st.markdown("**🎨 Appearance**")
+    theme = st.selectbox("Theme", ["Light", "Dark"], index=0)
 
-        st.markdown("---")
-        col_save, col_clear = st.columns([1, 1])
-        with col_save:
-            if st.button("Save Settings", type="primary", use_container_width=True):
-                st.success("Settings saved successfully!")
-        with col_clear:
-            if st.button("Clear Selection", use_container_width=True):
-                st.session_state.pop("selected_feature", None)
-                st.rerun()
+    st.markdown("---")
+    col_save, col_clear = st.columns([1, 1])
+    with col_save:
+        if st.button("Save Settings", type="primary", use_container_width=True):
+            st.success("Settings saved successfully!")
+    with col_clear:
+        if st.button("❌ Close Settings", use_container_width=True):
+            st.session_state["selected_feature"] = None
+            st.rerun()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
