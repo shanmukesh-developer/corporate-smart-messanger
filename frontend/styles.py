@@ -27,41 +27,30 @@ SHARED_CSS = """
     ::-webkit-scrollbar-thumb { background: var(--dark-gold); border-radius: 10px; }
 
     /* SHIMMER GLASS CARD */
+    /* EXTRAORDINARY MASTERPIECE VFX */
+    @keyframes border-shimmer {
+        0% { border-color: rgba(212, 175, 55, 0.1); }
+        50% { border-color: rgba(212, 175, 55, 0.8); }
+        100% { border-color: rgba(212, 175, 55, 0.1); }
+    }
+    
     .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(25px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+        border: 1px solid rgba(212, 175, 55, 0.2) !important;
+        border-radius: 28px !important;
         padding: 2.5rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8) !important;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
         position: relative;
         overflow: hidden;
-        transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-    }
-    .glass-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -150%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            to right,
-            transparent,
-            rgba(212, 175, 55, 0.1),
-            transparent
-        );
-        transform: skewX(-25deg);
-        transition: 0.75s;
-    }
-    .glass-card:hover::before {
-        left: 150%;
+        animation: border-shimmer 8s infinite alternate;
     }
     .glass-card:hover {
-        border-color: var(--primary-gold);
-        transform: scale(1.02);
-        box-shadow: 0 15px 50px rgba(212, 175, 55, 0.1);
+        transform: translateY(-8px) scale(1.01);
+        border: 1px solid rgba(212, 175, 55, 0.6) !important;
+        box-shadow: 0 25px 80px rgba(212, 175, 55, 0.15) !important;
     }
 
     /* PREMIUM BUTTONS */

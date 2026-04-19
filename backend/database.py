@@ -5,6 +5,11 @@ from datetime import datetime, timezone # type: ignore
 from pymongo import MongoClient # type: ignore
 from pymongo.errors import OperationFailure, ServerSelectionTimeoutError # type: ignore
 from dotenv import load_dotenv # type: ignore
+import logging # type: ignore
+try:
+    import task_extractor # type: ignore
+except:
+    pass
 
 # Robust Path Injection
 CWD = os.getcwd()
@@ -241,10 +246,8 @@ def send_message(conversation_id, sender_id, content):
                         events_collection.insert_one(event)
                         
     except Exception as e:
-        # Log error but don't fail message sending
-        import logging # type: ignore
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error extracting tasks from message: {e}")
+        # Log error using top-level logger
+        logging.error(f"Error extracting tasks from message: {e}")
     
     return msg
 
