@@ -16,7 +16,7 @@ try:
         get_all_users_for_chat, get_or_create_direct_conversation, 
         create_group_conversation, get_registered_users
     )
-    from streamlit_autorefresh import st_autorefresh
+    from streamlit_autorefresh import st_autorefresh # type: ignore
 except (ImportError, ModuleNotFoundError):
     try:
         from frontend.styles import SHARED_CSS
