@@ -207,9 +207,9 @@ def send_message(conversation_id, sender_id, content):
                 
                 # Import task extractor
                 try:
-                    import task_extractor
+                    import task_extractor # type: ignore
                 except ImportError:
-                    from . import task_extractor
+                    from . import task_extractor # type: ignore
                 
                 # Extract tasks
                 tasks = task_extractor.extract_tasks_from_message(
