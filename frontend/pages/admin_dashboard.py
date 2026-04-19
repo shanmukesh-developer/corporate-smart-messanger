@@ -26,7 +26,7 @@ except ImportError:
     # Fallback to local paths if IDE is struggling
     sys.path.append(os.path.join(os.getcwd(), "backend"))
     sys.path.append(os.getcwd())
-    from styles import SHARED_CSS
+    from styles import SHARED_CSS # type: ignore
     from database import get_users_collection, get_registered_users # type: ignore
     from auth import register_user, change_password, DEPARTMENTS, ROLES # type: ignore
     from rag_assistant import answer # type: ignore

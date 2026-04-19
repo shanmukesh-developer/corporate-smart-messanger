@@ -40,7 +40,7 @@ def retrieve_context(query: str, user_id: str, top_k=15):
             return []
 
         # Fetch recent messages from these conversations
-        from backend.database import get_messages_collection
+        from backend.database import get_messages_collection # type: ignore
         msgs_col = get_messages_collection()
         
         # Get last top_k messages across all user's conversations
