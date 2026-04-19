@@ -5,7 +5,7 @@ import os
 # Add parent dir to path so we can import from backend modules
 sys.path.insert(0, os.path.dirname(__file__))
 
-from database import get_messages_collection, get_conversations_collection, get_users_collection
+from database import get_messages_collection, get_conversations_collection, get_users_collection # type: ignore
 
 def export_rag_data(filename="rag_chat_data.csv"):
     try:
