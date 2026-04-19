@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+rag_store/
+backend/local_data/*.json
+!backend/local_data/users.json # Keep seeded users for now? Actually maybe better not to push any data.
+backend/local_data/conversations.json
+backend/local_data/messages.json
+backend/local_data/events.json
+.vscode/
+node_modules/
+dist/
+build/
+*.log
