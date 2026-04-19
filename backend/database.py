@@ -1,6 +1,7 @@
 import os # type: ignore
 import sys # type: ignore
 import uuid # type: ignore
+from uuid import uuid4 # type: ignore
 from datetime import datetime, timezone # type: ignore
 from pymongo import MongoClient # type: ignore
 from pymongo.errors import OperationFailure, ServerSelectionTimeoutError # type: ignore
@@ -149,7 +150,7 @@ def get_or_create_direct_conversation(id1, id2):
 def create_group_conversation(creator_id, name, participants):
     """Create a new group conversation"""
     convos = get_conversations_collection()
-    convo_id = f"group_{uuid.uuid4().hex[:8]}"
+    convo_id = f"group_{uuid4().hex[:8]}"
     
     # Ensure creator is in participants
     if creator_id not in participants:
