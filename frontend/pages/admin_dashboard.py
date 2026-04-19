@@ -27,9 +27,9 @@ except ImportError:
     sys.path.append(os.path.join(os.getcwd(), "backend"))
     sys.path.append(os.getcwd())
     from styles import SHARED_CSS
-    from database import get_users_collection, get_registered_users
-    from auth import register_user, change_password, DEPARTMENTS, ROLES
-    from rag_assistant import answer
+    from database import get_users_collection, get_registered_users # type: ignore
+    from auth import register_user, change_password, DEPARTMENTS, ROLES # type: ignore
+    from rag_assistant import answer # type: ignore
 
 # Helper for background
 def get_base64_bin_file(bin_file):

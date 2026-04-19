@@ -1,15 +1,17 @@
 import sys, os
-import streamlit as st
+import streamlit as st # type: ignore
 
 # Enhanced Path Resolution for broad compatibility
+CWD = os.getcwd()
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKEND = os.path.join(ROOT, "backend")
 if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
 if ROOT not in sys.path: sys.path.insert(0, ROOT)
+if CWD not in sys.path: sys.path.insert(0, CWD)
 
 try:
-    from styles import SHARED_CSS
-    from auth import login_user
+    from styles import SHARED_CSS # type: ignore
+    from auth import login_user # type: ignore
 except ImportError:
     # Fallback for complex IDE environments
     sys.path.append(os.path.join(os.getcwd(), "backend"))
@@ -26,17 +28,23 @@ st.set_page_config(
 
 st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
-# BACKGROUND VFX
-st.markdown(f"""
-<style>
+# LOAD BACKGROUND
+bg_path = os.path.join(CWD if 'CWD' in locals() else os.getcwd(), "frontend", "assets", "bg.png")
+if os.path.exists(bg_path):
+    import base64
+    with open(bg_path, "rb") as f:
+        bin_str = base64.b64encode(f.read()).decode()
+    st.markdown(f"""
+    <style>
     .stApp {{
-        background: linear-gradient(rgba(10, 14, 26, 0.8), rgba(10, 14, 26, 0.8)), 
-                    url("app/static/bg.png");
+        background: linear-gradient(rgba(10, 14, 26, 0.9), rgba(10, 14, 26, 0.9)), 
+                    url("data:image/png;base64,{bin_str}");
         background-size: cover;
         background-position: center;
+        background-attachment: fixed;
     }}
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """, unsafe_allow_html=True)
 
 # Redirect if already logged in
 if st.session_state.get("logged_in"):

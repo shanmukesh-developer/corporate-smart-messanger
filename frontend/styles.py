@@ -26,21 +26,42 @@ SHARED_CSS = """
     ::-webkit-scrollbar-track { background: var(--midnight-navy); }
     ::-webkit-scrollbar-thumb { background: var(--dark-gold); border-radius: 10px; }
 
-    /* GLASSMORPHISM CARD */
+    /* SHIMMER GLASS CARD */
     .glass-card {
         background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--glass-border);
         border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        padding: 2.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+    .glass-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to right,
+            transparent,
+            rgba(212, 175, 55, 0.1),
+            transparent
+        );
+        transform: skewX(-25deg);
+        transition: 0.75s;
+    }
+    .glass-card:hover::before {
+        left: 150%;
     }
     .glass-card:hover {
         border-color: var(--primary-gold);
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px 0 rgba(212, 175, 55, 0.15);
+        transform: scale(1.02);
+        box-shadow: 0 15px 50px rgba(212, 175, 55, 0.1);
     }
 
     /* PREMIUM BUTTONS */

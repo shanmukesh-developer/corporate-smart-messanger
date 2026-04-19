@@ -1,5 +1,5 @@
 import sys, os
-import streamlit as st
+import streamlit as st # type: ignore
 import base64
 from datetime import timezone, datetime
 
@@ -25,7 +25,7 @@ except (ImportError, ModuleNotFoundError):
             get_all_users_for_chat, get_or_create_direct_conversation, 
             create_group_conversation, get_registered_users
         )
-        from streamlit_autorefresh import st_autorefresh
+        from streamlit_autorefresh import st_autorefresh # type: ignore
     except:
         pass
 
@@ -147,7 +147,7 @@ with st.container():
                 txt = st.text_input("Type a message...", key="msg_input")
                 if st.form_submit_button("SEND"):
                     if txt:
-                        send_message(active_id, current_user_id, st.session_state.get("first_name"), txt)
+                        send_message(active_id, current_user_id, txt) # type: ignore
                         st.rerun()
         else:
             st.info("Select a conversation to start messaging.")
