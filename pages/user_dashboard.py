@@ -182,12 +182,12 @@ from rag_assistant import answer
 if "selected_feature" in st.session_state:
     st.divider()
 
-    if st.session_state["selected_feature"] == "chatbot":
+    if st.session_state.get("selected_feature") == "chatbot":
         st.markdown("#### 🤖 AI Chatbot Assistant")
         if "chatbot_messages" not in st.session_state:
             st.session_state["chatbot_messages"] = []
 
-        for m in st.session_state["chatbot_messages"]:
+        for m in st.session_state.get("chatbot_messages", []):
             with st.chat_message(m["role"]):
                 st.write(m["content"])
 
@@ -214,7 +214,7 @@ if "selected_feature" in st.session_state:
                 st.session_state.pop("selected_feature", None)
                 st.rerun()
 
-    elif st.session_state["selected_feature"] == "settings":
+    elif st.session_state.get("selected_feature") == "settings":
         st.markdown("#### ⚙️ Settings")
         st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
 

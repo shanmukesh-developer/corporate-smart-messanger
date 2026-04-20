@@ -23,7 +23,7 @@ st.markdown(SHARED_CSS, unsafe_allow_html=True)
 
 # Auth guard - must be logged in
 if not st.session_state.get("logged_in"):
-    st.switch_page("../streamlit_login.py")
+    st.switch_page("pages/streamlit_login.py")
 
 # Check if password change is forced
 if not st.session_state.get("force_password_change", False):

@@ -73,7 +73,7 @@ st.markdown("""
 
 # Auth guard – admins only
 if not st.session_state.get("logged_in"):
-    st.switch_page("../streamlit_login.py")
+    st.switch_page("pages/streamlit_login.py")
 
 if st.session_state.get("role") != "admin":
     st.error("⛔ Access denied. Admin privileges required.")
@@ -150,12 +150,12 @@ with row3_col2:
 if "selected_feature" in st.session_state:
     st.divider()
     
-    if st.session_state["selected_feature"] == "chatbot":
+    if st.session_state.get("selected_feature") == "chatbot":
         st.markdown("#### 🤖 AI Chatbot Assistant")
         if "chatbot_messages" not in st.session_state:
             st.session_state["chatbot_messages"] = []
 
-        for m in st.session_state["chatbot_messages"]:
+        for m in st.session_state.get("chatbot_messages", []):
             with st.chat_message(m["role"]):
                 st.write(m["content"])
 
@@ -182,7 +182,7 @@ if "selected_feature" in st.session_state:
                 st.session_state.pop("selected_feature", None)
                 st.rerun()
                 
-    elif st.session_state["selected_feature"] == "register":
+    elif st.session_state.get("selected_feature") == "register":
         st.markdown("#### 👥 Register New User")
         st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
         st.markdown("Fill in the details below to register a new employee.")
@@ -251,7 +251,7 @@ if "selected_feature" in st.session_state:
                     
         st.markdown("</div>", unsafe_allow_html=True)
         
-    elif st.session_state["selected_feature"] == "view":
+    elif st.session_state.get("selected_feature") == "view":
         st.markdown("#### 📋 View Department Users")
         st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
         
@@ -302,7 +302,7 @@ if "selected_feature" in st.session_state:
                 
         st.markdown("</div>", unsafe_allow_html=True)
         
-    elif st.session_state["selected_feature"] == "settings":
+    elif st.session_state.get("selected_feature") == "settings":
         st.markdown("#### ⚙️ Settings")
         st.markdown("<div class='dash-card' style='padding: 1rem;'>", unsafe_allow_html=True)
         
