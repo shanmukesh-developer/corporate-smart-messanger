@@ -1,2 +1,2 @@
-cd frontend
-python -m streamlit run home.py
+@echo off
+python -m streamlit run app.py

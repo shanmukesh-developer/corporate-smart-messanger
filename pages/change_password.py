@@ -5,9 +5,6 @@ if ROOT not in sys.path: sys.path.insert(0, ROOT)
 BACKEND = os.path.join(ROOT, "backend")
 if BACKEND not in sys.path: sys.path.insert(0, BACKEND)
 
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "backend"))
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import streamlit as st
 from styles import SHARED_CSS
