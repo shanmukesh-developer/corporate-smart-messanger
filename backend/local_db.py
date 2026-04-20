@@ -17,26 +17,33 @@ CONVERSATIONS_FILE = DATA_DIR / "conversations.json"
 MESSAGES_FILE = DATA_DIR / "messages.json"
 EVENTS_FILE = DATA_DIR / "events.json"
 
+import threading
+from collections import defaultdict
+
+_file_locks = defaultdict(threading.Lock)
+
 def load_json_file(file_path):
     """Load data from JSON file. Returns empty list if not found or empty."""
-    if file_path.exists():
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                return data if isinstance(data, list) else []
-        except:
-            return []
-    return []
+    with _file_locks[str(file_path)]:
+        if file_path.exists():
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return data if isinstance(data, list) else []
+            except:
+                return []
+        return []
 
 def save_json_file(file_path, data):
     """Save data to JSON file"""
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, default=str)
-        return True
-    except Exception as e:
-        print(f"Error saving {file_path}: {e}")
-        return False
+    with _file_locks[str(file_path)]:
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, default=str)
+            return True
+        except Exception as e:
+            print(f"Error saving {file_path}: {e}")
+            return False
 
 # Simple mock result class
 class MockResult:
