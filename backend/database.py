@@ -240,52 +240,50 @@ def send_message(conversation_id, sender_id, content):
         }}
     )
     
-    # Extract tasks from the message (non-blocking)
+    # Extract tasks from the message (non-blocking thread)
     try:
-        # Check if auto-task creation is enabled (default to True for now)
-        # In a real implementation, this would be passed from the frontend
-        auto_task_creation = True  # TODO: Get from user settings
-        
+        auto_task_creation = True  
         if auto_task_creation:
-            # Get conversation participants
             conversation = convos.find_one({"conversation_id": conversation_id})
             if conversation:
                 participants = conversation.get("participants", [])
                 
-                # Task extractor handled via top-level import to ensure Zero-Red stability
+                def extract_and_store():
+                    try:
+                        tasks = task_extractor.extract_tasks_from_message(
+                            content, sender_id, participants, conversation_id, str(result.inserted_id)
+                        )
+                        if tasks:
+                            events_collection = get_events_collection()
+                            import logging
+                            for task in tasks:
+                                event = {
+                                    "title": task.get("title"),
+                                    "type": task.get("type", "task"),
+                                    "date": task.get("date"),
+                                    "time": task.get("time"),
+                                    "assigned_to": task.get("assigned_to", []),
+                                    "created_by": task.get("created_by"),
+                                    "source_message_id": task.get("source_message_id"),
+                                    "conversation_id": conversation_id,
+                                    "confidence": task.get("confidence", 0.5),
+                                    "extraction_method": task.get("extraction_method", "unknown"),
+                                    "created_at": datetime.now(timezone.utc),
+                                    "status": "pending"
+                                }
+                                events_collection.insert_one(event)
+                    except Exception as extraction_err:
+                        import logging
+                        logging.error(f"Async extraction error: {extraction_err}")
                 
-                # Extract tasks
-                tasks = task_extractor.extract_tasks_from_message(
-                    content, 
-                    sender_id, 
-                    participants, 
-                    conversation_id,
-                    str(result.inserted_id)
-                )
+                import threading
+                t = threading.Thread(target=extract_and_store)
+                t.daemon = True
+                t.start()
                 
-                # Store extracted tasks as events
-                if tasks:
-                    events_collection = get_events_collection()
-                    for task in tasks:
-                        event = {
-                            "title": task.get("title"),
-                            "type": task.get("type", "task"),
-                            "date": task.get("date"),
-                            "time": task.get("time"),
-                            "assigned_to": task.get("assigned_to", []),
-                            "created_by": task.get("created_by"),
-                            "source_message_id": task.get("source_message_id"),
-                            "conversation_id": conversation_id,
-                            "confidence": task.get("confidence", 0.5),
-                            "extraction_method": task.get("extraction_method", "unknown"),
-                            "created_at": now,
-                            "status": "pending"  # pending, completed, cancelled
-                        }
-                        events_collection.insert_one(event)
-                        
     except Exception as e:
-        # Log error using top-level logger
-        logging.error(f"Error extracting tasks from message: {e}")
+        import logging
+        logging.error(f"Error starting extraction thread: {e}")
     
     return msg
 
